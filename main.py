@@ -10,7 +10,7 @@ from config import config
 from utils import create_df, split_dataset, plot_loss, plot_acc, plot_iou
 from dataset import get_loader
 from train import train
-from test import test
+from test import test, test_image
 
 
 def main(train_mode=True, load_model=None):
@@ -55,7 +55,9 @@ def main(train_mode=True, load_model=None):
                              transform=t_test, batch_size=1, shuffle=False, device=device)
     test(model, test_loader)
 
+    # test_image(model, r"./data/dataset/semantic_drone_dataset/original_images/042.jpg", t_test, device)
+
 
 if __name__ == '__main__':
-    model_path = r'./checkpoints/model_state_dict_12.pth'
+    model_path = r'./checkpoints/resnet18_state_dict.pth'
     main(train_mode=False, load_model=model_path)

@@ -114,19 +114,28 @@ def plot_acc(history):
     plt.show()
 
 
-def blur_class(img, mask, class_idx):
+def blur_class(img, mask, class_idx, kernel=(50, 50)):
     np_mask = np.array(mask)
     np_mask[np.where(np_mask != class_idx)] = 0
     np_mask[np.where(np_mask == class_idx)] = 1
     np_mask = np.stack((np_mask, np_mask, np_mask), axis=-1)
 
     np_img = np.array(img)
+
+    # Taking the person from the image
     person_img = np_img * np_mask
-    person_blur = cv2.blur(person_img, (50, 50))
+
+    # Blur the whole image
+    blurred_img = cv2.blur(np_img, kernel)
+
+    # Extract the blurred person
+    person_blur = blurred_img * np_mask
+    # person_blur = cv2.blur(person_img, (50, 50))
+
     new_img = np_img - person_img + person_blur
 
     person_mask = Image.fromarray((np_mask * 255).astype(np.uint8))
-    new_img = Image.fromarray(new_img)
+    new_img = Image.fromarray(new_img.astype(np.uint8))
 
     return new_img, person_mask
 

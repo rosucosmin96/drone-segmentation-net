@@ -8,5 +8,5 @@ config = {
     "lr": 1e-4,
     "num_epochs": 15,
     "weight_decay": 1e-5,
-    "backbone": 'mobilenet_v2'
+    "backbone": 'resnet18'
 }
