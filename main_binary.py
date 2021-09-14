@@ -5,12 +5,12 @@ import albumentations as A
 
 from torch.optim import Adam
 
+from model import get_model
 from config import config
 from utils import create_df, split_dataset, plot_loss, plot_acc, plot_iou
 from dataset import get_loader
-from train import train
-from test import test, test_image
-from model import get_model
+from train import binary_train
+from test import binary_test, test_image
 
 
 def main(train_mode=True, load_model=None):
@@ -28,11 +28,11 @@ def main(train_mode=True, load_model=None):
     t_val = A.Compose([A.Resize(704, 1056, interpolation=cv2.INTER_NEAREST), A.HorizontalFlip(), A.GridDistortion(p=.2)])
 
     train_loader = get_loader(config["IMAGE_DIR"], config["MASK_DIR"], X_train, mean=config["mean"], std=config["std"],
-                              transform=t_train, batch_size=config["batch_size"], device=device)
+                              transform=t_train, batch_size=config["batch_size"], device=device, binary=True, classes=config["classes"])
     val_loader = get_loader(config["IMAGE_DIR"], config["MASK_DIR"], X_val, mean=config["mean"], std=config["std"],
-                            transform=t_val, batch_size=config["batch_size"], device=device)
+                            transform=t_val, batch_size=config["batch_size"], device=device, binary=True, classes=config["classes"])
 
-    model = get_model(config["backbone"]).to(device)
+    model = get_model(config["backbone"], binary=True).to(device)
     print("Model created...")
 
     if load_model:
@@ -41,9 +41,9 @@ def main(train_mode=True, load_model=None):
 
     if train_mode:
         optimizer = Adam(model.parameters(), lr=config["lr"], weight_decay=config["weight_decay"])
-        criterion = nn.CrossEntropyLoss()
+        criterion = nn.BCELoss()
 
-        model, history = train(config["num_epochs"], model, train_loader, val_loader, criterion, optimizer)
+        model, history = binary_train(config["num_epochs"], model, train_loader, val_loader, criterion, optimizer)
 
         plot_loss(history)
         plot_acc(history)
@@ -51,8 +51,8 @@ def main(train_mode=True, load_model=None):
 
     t_test = A.Resize(768, 1152, interpolation=cv2.INTER_NEAREST)
     test_loader = get_loader(config["IMAGE_DIR"], config["MASK_DIR"], X_test, mean=config["mean"], std=config["std"],
-                             transform=t_test, batch_size=1, shuffle=False, device=device)
-    test(model, test_loader)
+                             transform=t_test, batch_size=1, shuffle=False, device=device, binary=True, classes=config["classes"])
+    binary_test(model, test_loader)
 
     # test_image(model, r"./data/dataset/semantic_drone_dataset/original_images/042.jpg", t_test, device)
 

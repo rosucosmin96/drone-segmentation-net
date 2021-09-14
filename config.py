@@ -5,8 +5,11 @@ config = {
     "mean": [0.485, 0.456, 0.406],
     "std": [0.229, 0.224, 0.225],
     "batch_size": 1,
-    "lr": 1e-4,
+    "lr": 1e-3,
     "num_epochs": 15,
     "weight_decay": 1e-5,
-    "backbone": 'resnet18'
+    "backbone": 'resnet18',
+    "experiment": "resnet_lr1e-3_wd1e-5_e15",
+    "classes": [15, 17],
+    "dropout_rate": None
 }

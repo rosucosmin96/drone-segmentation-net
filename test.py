@@ -25,6 +25,21 @@ def test(model, test_loader):
             save_maskedImages(img, output, mask, title="{}_{}".format(config["backbone"], idx))
 
 
+def binary_test(model, test_loader):
+    model.eval()
+
+    with torch.no_grad():
+        for idx, (imgs, masks) in enumerate(test_loader):
+            outputs = model(imgs)
+            output = outputs.squeeze()
+            output = torch.round(output)
+
+            mask = masks.squeeze()
+            img = imgs.squeeze()
+
+            save_maskedImages(img, output, mask, title="{}_{}".format(config["backbone"], idx))
+
+
 def test_image(model, img_path, transform, device):
     img = cv2.imread(img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)

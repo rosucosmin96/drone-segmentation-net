@@ -35,6 +35,10 @@ def plot_maskedImage(img, mask, alpha=0.6, title='Picture with mask applied'):
 
 
 def save_maskedImages(img, output, mask, alpha=0.6, title='Picture with mask applied'):
+    save_path = os.path.join(r"./saved_images", config["experiment"])
+    if os.path.isdir(save_path) is False:
+        os.mkdir(save_path)
+
     n_img = np.transpose(img.cpu().numpy(), (1, 2, 0))
 
     plt.subplot(1, 2, 1)
@@ -47,23 +51,31 @@ def save_maskedImages(img, output, mask, alpha=0.6, title='Picture with mask app
     plt.imshow(output.cpu(), alpha=alpha)
     plt.title("Prediction")
 
-    plt.savefig("./saved_images/{}.jpg".format(title))
+    plt.savefig(save_path + "{}.jpg".format(title))
 
 
-def pixel_accuracy(output, truth):
+def pixel_accuracy(output, truth, binary=False):
     with torch.no_grad():
-        output = torch.argmax(F.softmax(output, dim=1), dim=1)
+        if binary:
+            output = torch.round(output)
+        else:
+            output = torch.argmax(F.softmax(output, dim=1), dim=1)
+
         correct = torch.eq(output, truth).int()
         acc = float(correct.sum()) / float(correct.numel())
 
     return acc * 100
 
 
-def mIoU(output, mask, n_classes=23):
+def mIoU(output, mask, n_classes=23, binary=False):
     epsilon = 1e-8
     with torch.no_grad():
-        output = F.softmax(output, dim=1)
-        output = torch.argmax(output, dim=1)
+        if binary:
+            output = torch.round(output)
+        else:
+            output = F.softmax(output, dim=1)
+            output = torch.argmax(output, dim=1)
+
         output = output.contiguous().view(-1)
         mask = mask.contiguous().view(-1)
 
@@ -116,8 +128,9 @@ def plot_acc(history):
 
 def blur_class(img, mask, class_idx, kernel=(50, 50)):
     np_mask = np.array(mask)
-    np_mask[np.where(np_mask != class_idx)] = 0
-    np_mask[np.where(np_mask == class_idx)] = 1
+    # np_mask[np.where(np_mask != class_idx)] = 0
+    # np_mask[np.where(np_mask == class_idx)] = 1
+    np_mask = np.isin(np_mask, class_idx)
     np_mask = np.stack((np_mask, np_mask, np_mask), axis=-1)
 
     np_img = np.array(img)
@@ -144,11 +157,11 @@ if __name__ == '__main__':
     df = create_df()
     print(len(df))
 
-    img = Image.open(config["IMAGE_DIR"] + df['id'][25] + '.jpg')
-    mask = Image.open(config["MASK_DIR"] + df['id'][25] + '.png')
+    img = Image.open(config["IMAGE_DIR"] + df['id'][50] + '.jpg')
+    mask = Image.open(config["MASK_DIR"] + df['id'][50] + '.png')
     plot_maskedImage(img, mask)
 
-    new_img, person_mask = blur_class(img, mask, class_idx=15)
+    new_img, person_mask = blur_class(img, mask, class_idx=[15, 17])
     plt.subplot(1, 3, 1)
     plt.imshow(img)
     plt.subplot(1, 3, 2)
